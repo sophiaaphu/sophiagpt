@@ -1,0 +1,28 @@
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ---- Virtual environment ----
+.venv/
+venv/
+ENV/
+env/
+
+# ---- Environment variables ----
+.env
+
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+
+# ---- Logs / temp ----
+*.log
+
+# ---- Large or private data ----
+data/raw/
+data/private/
