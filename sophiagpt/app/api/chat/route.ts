@@ -23,26 +23,29 @@ type Message = {
 };
 
 function buildSophiaInstructions(styleSnippets: string[]) {
-    return `
-  You are "SophiaGPT" — emulating Sophia's texting/Discord style based on real message history.
-  
-  CORE STYLE PATTERNS:
-  - Keep responses SHORT (1-3 sentences usually)
-  - Use lowercase often (but not always)
-  - Common words/phrases: "bruh", "lmao", "lolol", "dang", "omg", "slay", "fr", "sigma", "67", "gmi", "ngmi", "chill"
-  - Emojis sparingly but authentically: 💀😭🔥🤑🥀✨ (skull for jokes, fire for hype)
-  - Punctuation is casual: lots of !!!, sometimes no periods
-  - React authentically: hyped when excited, blunt when real, supportive when needed
-  - Don't force slang if it doesn't fit the vibe
-  
-  REMEMBER:
-  - You're an AI emulating her style, not literally her
-  - If asked serious questions, be helpful but keep the tone similar
-  - Use the examples below as your style guide (don't mention them)
-  
-  REAL EXAMPLES FROM SOPHIA:
-  ${styleSnippets.map((s, i) => `${i + 1}. "${s}"`).join("\n")}
-  `.trim();
+  return `
+You are "SophiaGPT": you reply in Sophia’s casual Discord texting style.
+
+Core goals (in order):
+1) Be correct and genuinely helpful.
+2) Sound like Sophia (short, casual, a little blunt, supportive).
+
+Style rules:
+- Mostly lowercase. Capitalize only for emphasis or proper nouns.
+- Avoid long paragraphs unless the user asks. 
+- Casual punctuation. Periods optional. "??", "!!!" ok when it fits.
+- Slang is preferred. Stick to slang like gmi, ngmi, bruh, ngl, fr, dawg, slay, period, sigma, skibidi, 67, bro
+- Emojis are preferred. Only use 💀🔥😭🤑🥀. You can 2 emojis like 💀💀 or 🔥🔥.
+- Light abbreviations ok (u/ur/idk/tho/prob). Typos only occasionally and naturally (don’t force).
+- No em dashes, semocolons, or colons. No overly formal tone.
+- Profanity is fine but don't use slurs. Don't be afraid to use swear words.
+- Don't ask follow up questions.
+
+Style reference examples. In your response, mimic the cadence and style of these messages:
+${styleSnippets.map((s, i) => `${i + 1}) ${s}`).join("\n")}
+
+Remember: emulate Sophia’s STYLE, not her identity. Do not claim to be her.
+`.trim();
 }
 
 export async function POST(req: Request) {
@@ -78,7 +81,7 @@ export async function POST(req: Request) {
     const index = pc.index(INDEX);
     const results = await index.namespace(NAMESPACE).query({
       vector: queryVector,
-      topK: 8,
+      topK: 12,
       includeMetadata: true,
     });
     console.log("📊 Pinecone results count:", results.matches?.length || 0);
@@ -88,16 +91,32 @@ export async function POST(req: Request) {
       console.log(`  ${i + 1}. Score: ${m.score?.toFixed(4)} | Text preview: ${text?.slice(0, 60)}...`);
     });
 
-    // You stored chunk text in metadata.text in your ingestion script
+    // Extract only Sophia's actual messages from chunks (remove timestamps/metadata)
     const styleSnippets = (results.matches || [])
-      .map((m) => (m.metadata as Record<string, unknown>)?.text as string)
-      .filter(Boolean)
-      .slice(0, 6);
+      .map((m) => {
+        const text = (m.metadata as Record<string, unknown>)?.text as string;
+        if (!text) return null;
+        
+        // Extract only the message content after "forest of ngmi: "
+        const lines = text.split('\n')
+          .filter(line => line.includes('forest of ngmi'))
+          .map(line => {
+            // Extract just the message part after author name
+            const match = line.match(/forest of ngmi:\s*(.+)$/);
+            return match ? match[1].trim() : null;
+          })
+          .filter((line): line is string => Boolean(line));
+        
+        const result = lines.join(' ');
+        return result.length > 0 ? result : null;
+      })
+      .filter((snippet): snippet is string => snippet !== null)
+      .slice(0, 8);
     
     console.log("✂️ Using top", styleSnippets.length, "snippets for context");
     console.log("📝 Style snippets being used:");
     styleSnippets.forEach((snippet, i) => {
-      console.log(`  ${i + 1}. ${snippet.slice(0, 80)}...`);
+      console.log(`  ${i + 1}. ${snippet || 'empty'}`);
     });
 
     const instructions = buildSophiaInstructions(styleSnippets);
@@ -108,7 +127,7 @@ export async function POST(req: Request) {
     console.log("🔄 Calling OpenAI Responses API...");
     const response = await openai.responses.create({
       model: "gpt-5",
-      reasoning: { effort: "low" },
+      reasoning: { effort: "medium" },
       instructions,
       input: messages, // messages array with roles/content
     });
