@@ -148,7 +148,7 @@ export default function Home() {
                     <SidebarMenuButton
                       isActive={chat.id === currentChatId}
                       onClick={() => setCurrentChatId(chat.id)}
-                      className="flex-1 text-white hover:bg-neutral-900"
+                      className="flex-1 text-white hover:bg-[#2F2F2F] hover:text-white transition data-[active=true]:bg-[#222222] data-[active=true]:text-white data-[active=true]:font-normal data-[active=true]:hover:bg-[#2F2F2F]"
                     >
                       <span className="truncate text-sm p-2">{chat.title}</span>
                     </SidebarMenuButton>
