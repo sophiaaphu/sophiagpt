@@ -1,7 +1,7 @@
 "use client";
-
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, Plus, Trash2 } from "lucide-react";
+import { SquarePen, Search, ChevronRight, ChevronUp } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ export default function Home() {
   ]);
   const [currentChatId, setCurrentChatId] = useState("1");
   const [input, setInput] = useState("");
+  const [chatsExpanded, setChatsExpanded] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -106,45 +107,68 @@ export default function Home() {
 
   return (
     <>
-      <Sidebar className=" bg-black text-white">
-        <SidebarHeader className="p-3">
+      <Sidebar className="border-none text-white">
+        <SidebarHeader className="bg-[#181818] gap-0">
+          <div className = "px-4 py-2 mb-2">
+            <Image src="/sophiagpt-white.png" alt="SophiaGPT" width={28} height={30} />
+          </div>
           <button
             onClick={newChat}
-            className="flex w-full items-center gap-2 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800 transition"
+            className="flex w-full items-center gap-2 rounded-sm px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] transition"
           >
-            <Plus className="size-4" />
+            <SquarePen className="size-4" />
             New Chat
           </button>
+          <button
+            className="flex w-full items-center gap-2 rounded-sm px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] transition"
+          >
+            <Search className="size-4" />
+            Search Chats
+          </button>
         </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {chats.map((chat) => (
-              <SidebarMenuItem key={chat.id}>
-                <div className="flex items-center gap-1">
-                  <SidebarMenuButton
-                    isActive={chat.id === currentChatId}
-                    onClick={() => setCurrentChatId(chat.id)}
-                    className="flex-1 text-white hover:bg-neutral-900"
-                  >
-                    <MessageSquare className="size-4" />
-                    <span className="truncate">{chat.title}</span>
-                  </SidebarMenuButton>
-                  {chats.length > 1 && (
-                    <button
-                      onClick={() => deleteChat(chat.id)}
-                      className="p-1.5 rounded-md hover:bg-neutral-900 transition"
+        <SidebarContent className="bg-[#181818] text-white">
+          <div className="px-6 pt-4">
+            <button
+              onClick={() => setChatsExpanded(!chatsExpanded)}
+              className="group/chats-toggle flex gap-1 items-center text-sm text-[#A6A6A6] transition"
+            >
+              <span className="text-sm text-[#A6A6A6]">Your chats</span>
+              {chatsExpanded ? (
+                <ChevronUp className="size-4 opacity-0 group-hover/chats-toggle:opacity-100 transition-opacity" />
+              ) : (
+                <ChevronRight className="size-4" />
+              )}
+            </button>
+          </div>
+          {chatsExpanded && (
+            <SidebarMenu>
+              {chats.map((chat) => (
+                <SidebarMenuItem key={chat.id}>
+                  <div className="flex items-center gap-1">
+                    <SidebarMenuButton
+                      isActive={chat.id === currentChatId}
+                      onClick={() => setCurrentChatId(chat.id)}
+                      className="flex-1 text-white hover:bg-neutral-900"
                     >
-                      <Trash2 className="size-3.5 text-neutral-300" />
-                    </button>
-                  )}
-                </div>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+                      <span className="truncate text-sm">{chat.title}</span>
+                    </SidebarMenuButton>
+                    {/* {chats.length > 1 && (
+                      <button
+                        onClick={() => deleteChat(chat.id)}
+                        className="p-1.5 rounded-md hover:bg-neutral-900 transition"
+                      >
+                        <Trash2 className="size-3.5 text-neutral-300" />
+                      </button>
+                    )} */}
+                  </div>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          )}
         </SidebarContent>
       </Sidebar>
 
-      <SidebarInset className="flex h-screen flex-col bg-neutral-950 text-neutral-100">
+      <SidebarInset className="flex h-screen flex-col bg-[#222222] text-neutral-100">
         {/* Header */}
         <header className="border-b border-neutral-800 p-4 flex items-center gap-3">
           <SidebarTrigger className="text-neutral-400 hover:text-neutral-100" />
