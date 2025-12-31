@@ -144,13 +144,13 @@ export default function Home() {
             <SidebarMenu>
               {chats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center px-2">
                     <SidebarMenuButton
                       isActive={chat.id === currentChatId}
                       onClick={() => setCurrentChatId(chat.id)}
                       className="flex-1 text-white hover:bg-neutral-900"
                     >
-                      <span className="truncate text-sm">{chat.title}</span>
+                      <span className="truncate text-sm p-2">{chat.title}</span>
                     </SidebarMenuButton>
                     {/* {chats.length > 1 && (
                       <button
