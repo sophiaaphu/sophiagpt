@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Msg[] };
 
 export default function Home() {
+  const { open } = useSidebar();
   const [chats, setChats] = useState<Chat[]>([
     {
       id: "1",
@@ -133,8 +135,9 @@ export default function Home() {
     <>
       <Sidebar className="border-none text-white">
         <SidebarHeader className="bg-[#181818] gap-0">
-          <div className = "px-4 py-2 mb-2">
+          <div className="flex items-center justify-between px-4 py-2 mb-2">
             <Image src="/sophiagpt-white.png" alt="SophiaGPT" width={28} height={30} />
+            <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />
           </div>
           <button
             onClick={newChat}
@@ -232,7 +235,7 @@ export default function Home() {
       <SidebarInset className="flex h-screen flex-col bg-[#222222] text-neutral-100">
         {/* Header */}
         <header className="border-b border-neutral-800 p-4 flex items-center gap-3">
-          <SidebarTrigger className="text-neutral-400 hover:text-neutral-100" />
+          {!open && <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />}
           <span className="text-lg font-semibold">SophiaGPT</span>
         </header>
 
