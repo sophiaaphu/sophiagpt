@@ -25,7 +25,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Msg[] };
 
 export default function Home() {
-  const { open } = useSidebar();
+  const { open, isMobile, openMobile } = useSidebar();
   const [chats, setChats] = useState<Chat[]>([
     {
       id: "1",
@@ -235,7 +235,7 @@ export default function Home() {
       <SidebarInset className="flex h-screen flex-col bg-[#222222] text-neutral-100">
         {/* Header */}
         <header className="border-b border-neutral-800 p-4 flex items-center gap-3">
-          {!open && <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />}
+          {((isMobile && !openMobile) || (!isMobile && !open)) && <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />}
           <span className="text-lg font-semibold">SophiaGPT</span>
         </header>
 
