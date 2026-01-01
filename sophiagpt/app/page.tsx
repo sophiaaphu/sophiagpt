@@ -236,7 +236,7 @@ export default function Home() {
         {/* Header */}
         <header className="border-b border-neutral-800 p-4 flex items-center gap-3">
           {((isMobile && !openMobile) || (!isMobile && !open)) && <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />}
-          <span className="text-lg font-semibold">SophiaGPT</span>
+          <span className={`text-lg font-semibold ${open && !isMobile ? 'px-2' : ''}`}>SophiaGPT</span>
         </header>
 
         {/* Chat area */}
