@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { SquarePen, Search, ChevronRight, ChevronUp } from "lucide-react";
+import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,13 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Msg[] };
@@ -27,6 +34,8 @@ export default function Home() {
   const [currentChatId, setCurrentChatId] = useState("1");
   const [input, setInput] = useState("");
   const [chatsExpanded, setChatsExpanded] = useState(true);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
@@ -105,6 +114,21 @@ export default function Home() {
     });
   }
 
+  function startRename(id: string, currentTitle: string) {
+    setRenamingId(id);
+    setRenameValue(currentTitle);
+  }
+
+  function saveRename(id: string) {
+    if (renameValue.trim()) {
+      setChats((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title: renameValue.trim() } : c))
+      );
+    }
+    setRenamingId(null);
+    setRenameValue("");
+  }
+
   return (
     <>
       <Sidebar className="border-none text-white">
@@ -144,22 +168,59 @@ export default function Home() {
             <SidebarMenu>
               {chats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
-                  <div className="flex items-center px-2">
-                    <SidebarMenuButton
-                      isActive={chat.id === currentChatId}
-                      onClick={() => setCurrentChatId(chat.id)}
-                      className="flex-1 text-white hover:bg-[#2F2F2F] hover:text-white transition data-[active=true]:bg-[#222222] data-[active=true]:text-white data-[active=true]:font-normal data-[active=true]:hover:bg-[#2F2F2F]"
-                    >
-                      <span className="truncate text-sm p-2">{chat.title}</span>
-                    </SidebarMenuButton>
-                    {/* {chats.length > 1 && (
-                      <button
-                        onClick={() => deleteChat(chat.id)}
-                        className="p-1.5 rounded-md hover:bg-neutral-900 transition"
-                      >
-                        <Trash2 className="size-3.5 text-neutral-300" />
-                      </button>
-                    )} */}
+                  <div className={`group/chat-item flex items-center mx-2 rounded-md hover:bg-[#2F2F2F] transition ${chat.id === currentChatId ? 'bg-[#222222]' : ''}`}>
+                    {renamingId === chat.id ? (
+                      <input
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveRename(chat.id);
+                          if (e.key === "Escape") {
+                            setRenamingId(null);
+                            setRenameValue("");
+                          }
+                        }}
+                        onBlur={() => saveRename(chat.id)}
+                        autoFocus
+                        className="flex-1 bg-neutral-800 text-white px-4 py-1.5 text-sm rounded-md outline-none focus:outline-none"
+                      />
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          isActive={chat.id === currentChatId}
+                          onClick={() => setCurrentChatId(chat.id)}
+                          className="flex-1 text-white hover:text-white hover:bg-transparent transition data-[active=true]:bg-transparent data-[active=true]:text-white data-[active=true]:font-normal"
+                        >
+                          <span className="truncate text-sm p-2">{chat.title}</span>
+                        </SidebarMenuButton>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="opacity-0 group-hover/chat-item:opacity-100 data-[state=open]:opacity-100 p-2 rounded-md transition outline-none focus:outline-none focus-visible:ring-0">
+                              <MoreHorizontal className="size-4 text-neutral-300" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-40 bg-[#3A3A3A] border-neutral-700">
+                            <DropdownMenuItem
+                              onClick={() => startRename(chat.id, chat.title)}
+                              className="text-white hover:bg-[#4A4A4A] focus:bg-[#4A4A4A] focus:text-white cursor-pointer"
+                            >
+                              <Pencil className="size-4 text-white" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-neutral-600" />
+                            <DropdownMenuItem
+                              onClick={() => deleteChat(chat.id)}
+                              variant="destructive"
+                              className="cursor-pointer"
+                            >
+                              <Trash2 className="size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
                   </div>
                 </SidebarMenuItem>
               ))}
