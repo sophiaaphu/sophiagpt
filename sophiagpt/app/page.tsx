@@ -243,11 +243,11 @@ export default function Home() {
         </header>
 
         {/* Chat area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={`flex-1 overflow-y-auto mx-auto w-full p-4 ${open ? 'max-w-2xl' : 'max-w-3xl'}`}>
           {messages.length === 1 && messages[0].role === "assistant" ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 pb-48">
-              <h2 className="text-3xl text-white">Anything ngmi on your mind today?</h2>
-              <div className="relative w-full max-w-2xl">
+              <h2 className="text-3xl text-white text-center">Anything ngmi on your mind?</h2>
+              <div className="relative w-full">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -307,45 +307,50 @@ export default function Home() {
 
         {/* Input - only show when there are messages */}
         {!(messages.length === 1 && messages[0].role === "assistant") && (
-          <div className="border-t border-neutral-800 p-4">
-            <div className="relative">
-              <textarea
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  // If empty, reset to original state
-                  if (e.target.value === '') {
-                    e.target.style.height = '';
-                    setIsMultiline(false);
-                    return;
-                  }
-                  // Reset height to minimum to allow proper shrinking
-                  e.target.style.height = '44px'; // minimum height for single line
-                  const newHeight = Math.min(e.target.scrollHeight, 200); // max height ~8 lines
-                  e.target.style.height = newHeight + 'px';
-                  // Check if content has actually wrapped to multiple lines
-                  setIsMultiline(newHeight > 48); // slightly above single line height
-                  // Scroll to bottom when content changes
-                  e.target.scrollTop = e.target.scrollHeight;
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send();
-                  }
-                }}
-                placeholder="type something..."
-                rows={1}
-                className={`w-full rounded-xl bg-neutral-900 px-4 py-2 text-sm outline-none focus:outline-none resize-none overflow-y-auto max-h-50 ${isMultiline ? 'pb-10' : 'pr-12'} [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:#666_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500`}
-              />
-              <button
-                onClick={send}
-                className="absolute right-2 bottom-2 rounded-full bg-white p-1.5 hover:bg-gray-200 transition"
-              >
-                <ArrowUp className="size-4 text-black" />
-              </button>
+          <>
+            <div className={`p-0 px-4 mb-1 flex justify-center mx-auto w-full ${open ? 'max-w-2xl' : 'max-w-3xl'}`}>
+              <div className="relative w-full">
+                <textarea
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    // If empty, reset to original state
+                    if (e.target.value === '') {
+                      e.target.style.height = '';
+                      setIsMultiline(false);
+                      return;
+                    }
+                    // Reset height to minimum to allow proper shrinking
+                    e.target.style.height = '56px'; // minimum height for single line
+                    const newHeight = Math.min(e.target.scrollHeight, 240); // max height ~8 lines
+                    e.target.style.height = newHeight + 'px';
+                    // Check if content has actually wrapped to multiple lines
+                    setIsMultiline(newHeight > 60); // slightly above single line height
+                    // Scroll to bottom when content changes
+                    e.target.scrollTop = e.target.scrollHeight;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send();
+                    }
+                  }}
+                  placeholder="Ask anything"
+                  rows={1}
+                  className={`w-full rounded-4xl bg-[#303030] text-white px-4 py-4 text-base outline-none focus:outline-none resize-none overflow-y-auto max-h-60 ${isMultiline ? 'pb-12' : 'pr-14'} [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:#666_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500`}
+                />
+                <button
+                  onClick={send}
+                  className="absolute right-3 bottom-3.5 rounded-full bg-white p-2 hover:bg-gray-200 transition"
+                >
+                  <ArrowUp className="size-5 text-black" />
+                </button>
+              </div>
             </div>
-          </div>
+            <div className="text-center text-xs text-white pb-4">
+              SophiaGPT can make mistakes. Check important info.
+            </div>
+          </>
         )}
       </SidebarInset>
     </>
