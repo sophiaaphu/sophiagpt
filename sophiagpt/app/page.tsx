@@ -2,6 +2,10 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import {
   Sidebar,
   SidebarContent,
@@ -294,7 +298,7 @@ export default function Home() {
         </header>
 
         {/* Chat area */}
-        <div className={`flex-1 overflow-y-auto mx-auto w-full p-4 md:p-0 ${open ? 'max-w-2xl' : 'max-w-3xl'}`}>
+        <div className={`flex-1 overflow-y-auto mx-auto w-full p-4 md:p-0 ${open ? 'max-w-2xl' : 'max-w-3xl'} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
           {messages.length === 1 && messages[0].role === "assistant" ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 pb-48">
               <h2 className="text-2xl md:text-3xl text-white text-center">Anything ngmi on your mind?</h2>
@@ -348,7 +352,18 @@ export default function Home() {
                       : "text-neutral-100"
                     }`}
                 >
-                  {m.content}
+                  {m.role === "assistant" ? (
+                    <div className="markdown">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeHighlight]}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    m.content
+                  )}
                 </div>
               ))}
             </>
