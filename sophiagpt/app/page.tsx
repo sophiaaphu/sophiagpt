@@ -112,6 +112,7 @@ export default function Home() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [isMultiline, setIsMultiline] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -136,12 +137,12 @@ export default function Home() {
     const chatExists = chats.some(c => c.id === currentChatId);
     if (!chatExists) {
       setChats((prev) => [
-        ...prev,
         {
           id: currentChatId,
           title: text.slice(0, 30) + (text.length > 30 ? "..." : ""),
           messages: next,
         },
+        ...prev,
       ]);
     } else {
       updateMessages(next);
@@ -149,6 +150,7 @@ export default function Home() {
     
     setInput("");
     setIsMultiline(false);
+    setIsLoading(true);
 
     const res = await fetch("/api/chat", {
       method: "POST",
@@ -157,6 +159,7 @@ export default function Home() {
     });
 
     const data = await res.json();
+    setIsLoading(false);
     
     // Update with assistant response
     setChats((prev) =>
@@ -457,6 +460,21 @@ export default function Home() {
                 </div>
               ))}
             </>
+          )}
+          {isLoading && (
+            <div className="flex items-start gap-3 px-2 pb-4">
+              <div className="flex-1">
+                <div className="markdown text-neutral-400 text-sm flex items-center">
+                  <span className="ripple-dot">C</span>
+                  <span className="ripple-dot">o</span>
+                  <span className="ripple-dot">o</span>
+                  <span className="ripple-dot">k</span>
+                  <span className="ripple-dot">i</span>
+                  <span className="ripple-dot">n</span>
+                  <span className="ripple-dot">g</span>
+                </div>
+              </div>
+            </div>
           )}
           <div ref={bottomRef} />
         </div>
