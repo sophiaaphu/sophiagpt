@@ -105,14 +105,8 @@ function CopyButton({ content }: { content: string }) {
 
 export default function Home() {
   const { open, isMobile, openMobile, toggleSidebar } = useSidebar();
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: "1",
-      title: "New Chat",
-      messages: [{ role: "assistant", content: "ask me anything" }],
-    },
-  ]);
-  const [currentChatId, setCurrentChatId] = useState("1");
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChatId, setCurrentChatId] = useState("initial");
   const [input, setInput] = useState("");
   const [chatsExpanded, setChatsExpanded] = useState(true);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -121,7 +115,11 @@ export default function Home() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentChat = chats.find((c) => c.id === currentChatId);
+  const currentChat = chats.find((c) => c.id === currentChatId) || {
+    id: currentChatId,
+    title: "New Chat",
+    messages: [{ role: "assistant", content: "ask me anything" }],
+  };
   const messages = currentChat?.messages || [];
 
   useEffect(() => {
@@ -133,7 +131,22 @@ export default function Home() {
     if (!text || !currentChat) return;
 
     const next: Msg[] = [...messages, { role: "user", content: text }];
-    updateMessages(next);
+    
+    // If current chat is not in the list yet (new unsaved chat), add it now
+    const chatExists = chats.some(c => c.id === currentChatId);
+    if (!chatExists) {
+      setChats((prev) => [
+        ...prev,
+        {
+          id: currentChatId,
+          title: text.slice(0, 30) + (text.length > 30 ? "..." : ""),
+          messages: next,
+        },
+      ]);
+    } else {
+      updateMessages(next);
+    }
+    
     setInput("");
     setIsMultiline(false);
 
@@ -144,7 +157,18 @@ export default function Home() {
     });
 
     const data = await res.json();
-    updateMessages([...next, { role: "assistant", content: data.text || "ngmi 💀" }]);
+    
+    // Update with assistant response
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === currentChatId
+          ? {
+              ...c,
+              messages: [...next, { role: "assistant", content: data.text || "ngmi 💀" }],
+            }
+          : c
+      )
+    );
   }
 
   function updateMessages(newMessages: Msg[]) {
@@ -166,33 +190,18 @@ export default function Home() {
 
   function newChat() {
     const id = Date.now().toString();
-    setChats((prev) => [
-      ...prev,
-      {
-        id,
-        title: "New Chat",
-        messages: [{ role: "assistant", content: "ask me anything" }],
-      },
-    ]);
+    // Don't add to chats array yet - will be added when first message is sent
     setCurrentChatId(id);
+    setInput("");
   }
 
   function deleteChat(id: string) {
     setChats((prev) => {
       const filtered = prev.filter((c) => c.id !== id);
-      if (filtered.length === 0) {
+      if (currentChatId === id) {
+        // Create a new unsaved chat
         const newId = Date.now().toString();
         setCurrentChatId(newId);
-        return [
-          {
-            id: newId,
-            title: "New Chat",
-            messages: [{ role: "assistant", content: "ask me anything" }],
-          },
-        ];
-      }
-      if (currentChatId === id) {
-        setCurrentChatId(filtered[0].id);
       }
       return filtered;
     });
@@ -233,7 +242,7 @@ export default function Home() {
             </div>
           )}
         </SidebarHeader>
-        <SidebarContent className={`text-white ${open ? 'bg-[#181818]' : 'bg-[#212121] border-r border-white/10'}`}>
+        <SidebarContent className={`text-white pb-4 ${open ? 'bg-[#181818]' : 'bg-[#212121] border-r border-white/10'} [scrollbar-width:thin] [scrollbar-color:#666_transparent] hover:[scrollbar-color:#666_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500`}>
           {open ? (
             <>
               <div className="px-2">
@@ -503,4 +512,3 @@ export default function Home() {
     </TooltipProvider>
   );
 }
-
