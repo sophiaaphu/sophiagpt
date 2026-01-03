@@ -1,11 +1,14 @@
 "use client";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp } from "lucide-react";
+import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp, Copy, Check } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
 import 'highlight.js/styles/github-dark.css';
+import 'katex/dist/katex.min.css';
 import {
   Sidebar,
   SidebarContent,
@@ -33,6 +36,72 @@ import {
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Msg[] };
+
+function CodeBlock({ children, className }: { children: string; className?: string }) {
+  const [copied, setCopied] = useState(false);
+  
+  // Extract language from className (e.g., "hljs language-python" -> "python")
+  const language = className
+    ?.split(' ')
+    .find(cls => cls.startsWith('language-'))
+    ?.replace('language-', '') || 'code';
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(children);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative group">
+      <div className="flex items-center justify-between bg-[#171717] px-4 pt-2 rounded-t-lg ">
+        <span className="text-xs text-gray-300">{language}</span>
+        <button
+          onClick={copyToClipboard}
+          className="p-1.5 rounded-md bg-[#171717]"
+          aria-label="Copy code"
+        >
+          {copied ? (
+            <Check className="size-3.5 text-gray-300" />
+          ) : (
+            <Copy className="size-3.5 text-gray-300" />
+          )}
+        </button>
+      </div>
+      <pre className={className} style={{ backgroundColor: '#171717' }}>
+        <code>{children}</code>
+      </pre>
+    </div>
+  );
+}
+
+function CopyButton({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={copyToClipboard}
+      className="-ml-2 flex items-center gap-2 text-xs text-gray-200 transition-colors hover:bg-[#2A2A2A] rounded-md p-2"
+      aria-label="Copy message"
+    >
+      {copied ? (
+        <>
+          <Check className="size-3.5" />
+        </>
+      ) : (
+        <>
+          <Copy className="size-3.5" />
+        </>
+      )}
+    </button>
+  );
+}
 
 export default function Home() {
   const { open, isMobile, openMobile, toggleSidebar } = useSidebar();
@@ -290,7 +359,7 @@ export default function Home() {
         </SidebarContent>
       </Sidebar>
 
-      <SidebarInset className="flex h-screen flex-col bg-[#222222] text-neutral-100">
+      <SidebarInset className="flex h-screen flex-col bg-[#222222] text-neutral-100 overflow-hidden">
         {/* Header */}
         <header className="p-4 flex items-center gap-3">
           {isMobile && !openMobile && <SidebarTrigger className="text-white hover:bg-[#3A3A3A] hover:text-white" />}
@@ -349,18 +418,30 @@ export default function Home() {
                   className={`text-sm mb-4 wrap-break-word
                     ${m.role === "user"
                       ? "ml-auto bg-[#333333] text-white max-w-[75%] rounded-2xl px-4 py-2 w-fit"
-                      : "text-neutral-100"
+                      : "text-neutral-100 pl-2"
                     }`}
                 >
                   {m.role === "assistant" ? (
-                    <div className="markdown">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight]}
-                      >
-                        {m.content}
-                      </ReactMarkdown>
-                    </div>
+                    <>
+                      <div className="markdown">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                          components={{
+                            pre: ({ children }) => {
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              const codeElement = children as any;
+                              const codeContent = codeElement?.props?.children || '';
+                              const codeClassName = codeElement?.props?.className || '';
+                              return <CodeBlock className={codeClassName}>{codeContent}</CodeBlock>;
+                            },
+                          }}
+                        >
+                          {m.content}
+                        </ReactMarkdown>
+                      </div>
+                      <CopyButton content={m.content} />
+                    </>
                   ) : (
                     m.content
                   )}

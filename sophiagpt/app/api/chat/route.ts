@@ -52,6 +52,15 @@ Code formatting (IMPORTANT):
 - For inline code, use single backticks like \`variable\`
 - Keep your casual tone in explanations but format code properly
 
+Math formatting (IMPORTANT):
+- For inline math, use single dollar signs: $x^2 + y^2 = z^2$
+- For block/display math, use double dollar signs on separate lines:
+  $$
+  \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
+  $$
+- Use proper LaTeX syntax for mathematical expressions
+- Keep your casual tone in explanations but format math properly
+
 Style reference examples. In your response, mimic the cadence and style of these messages:
 ${styleSnippets.map((s, i) => `${i + 1}) ${s}`).join("\n")}
 
