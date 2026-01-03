@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp, Copy, Check } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -115,17 +115,33 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastAssistantMessageRef = useRef<HTMLDivElement>(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId) || {
     id: currentChatId,
     title: "New Chat",
     messages: [{ role: "assistant", content: "ask me anything" }],
   };
-  const messages = currentChat?.messages || [];
+  const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [currentChat?.messages]);
+    // If loading just finished and we have an assistant message, scroll to it
+    if (!isLoading && messages.length > 0 && messages[messages.length - 1].role === "assistant") {
+      if (lastAssistantMessageRef.current && chatContainerRef.current) {
+        const container = chatContainerRef.current;
+        const message = lastAssistantMessageRef.current;
+        const messageTop = message.offsetTop;
+        container.scrollTop = messageTop - 20; // 20px offset from top
+      }
+    }
+    // For user messages, scroll to bottom
+    else if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+    }
+  }, [currentChat?.messages, isLoading, messages]);
 
   async function send() {
     const text = input.trim();
@@ -379,7 +395,7 @@ export default function Home() {
         </header>
 
         {/* Chat area */}
-        <div className={`flex-1 overflow-y-auto mx-auto w-full p-4 md:p-0 ${open ? 'max-w-2xl' : 'max-w-3xl'} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
+        <div ref={chatContainerRef} className={`flex-1 overflow-y-auto mx-auto w-full p-4 md:p-0 ${open ? 'max-w-2xl' : 'max-w-3xl'} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
           {messages.length === 1 && messages[0].role === "assistant" ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 pb-48">
               <h2 className="text-2xl md:text-3xl text-white text-center">Anything ngmi on your mind?</h2>
@@ -424,41 +440,47 @@ export default function Home() {
             </div>
           ) : (
             <>
-              {messages.filter(m => !(m.role === "assistant" && m.content === "ask me anything")).map((m, i) => (
-                <div
-                  key={i}
-                  className={`text-sm mb-4 wrap-break-word
-                    ${m.role === "user"
-                      ? "ml-auto bg-[#333333] text-white max-w-[75%] rounded-2xl px-4 py-2 w-fit"
-                      : "text-neutral-100 pl-2"
-                    }`}
-                >
-                  {m.role === "assistant" ? (
-                    <>
-                      <div className="markdown">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                          components={{
-                            pre: ({ children }) => {
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              const codeElement = children as any;
-                              const codeContent = codeElement?.props?.children || '';
-                              const codeClassName = codeElement?.props?.className || '';
-                              return <CodeBlock className={codeClassName}>{codeContent}</CodeBlock>;
-                            },
-                          }}
-                        >
-                          {m.content}
-                        </ReactMarkdown>
-                      </div>
-                      <CopyButton content={m.content} />
-                    </>
-                  ) : (
-                    m.content
-                  )}
-                </div>
-              ))}
+              {messages.filter(m => !(m.role === "assistant" && m.content === "ask me anything")).map((m, i) => {
+                const filteredMessages = messages.filter(m => !(m.role === "assistant" && m.content === "ask me anything"));
+                const isLastAssistantMessage = m.role === "assistant" && i === filteredMessages.length - 1;
+                
+                return (
+                  <div
+                    key={i}
+                    ref={isLastAssistantMessage ? lastAssistantMessageRef : null}
+                    className={`text-sm mb-4 wrap-break-word
+                      ${m.role === "user"
+                        ? "ml-auto bg-[#333333] text-white max-w-[75%] rounded-2xl px-4 py-2 w-fit"
+                        : "text-neutral-100 pl-2"
+                      }`}
+                  >
+                    {m.role === "assistant" ? (
+                      <>
+                        <div className="markdown">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[[rehypeKatex, { strict: false, throwOnError: false }], rehypeHighlight]}
+                            components={{
+                              pre: ({ children }) => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const codeElement = children as any;
+                                const codeContent = codeElement?.props?.children || '';
+                                const codeClassName = codeElement?.props?.className || '';
+                                return <CodeBlock className={codeClassName}>{codeContent}</CodeBlock>;
+                              },
+                            }}
+                          >
+                            {m.content}
+                          </ReactMarkdown>
+                        </div>
+                        <CopyButton content={m.content} />
+                      </>
+                    ) : (
+                      m.content
+                    )}
+                  </div>
+                );
+              })}
             </>
           )}
           {isLoading && (

@@ -59,6 +59,9 @@ Math formatting (IMPORTANT):
   \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}
   $$
 - Use proper LaTeX syntax for mathematical expressions
+- For units in math mode, use $\\mathrm{unit}$: $\\mu_0=4\\pi\\times10^{-7}\\,\\mathrm{T}\\cdot\\mathrm{m/A}$
+- Always wrap LaTeX commands like \\mathrm{} in dollar signs
+- When writing about money/currency, escape the dollar sign: \\$10/mo instead of $10/mo
 - Keep your casual tone in explanations but format math properly
 
 Style reference examples. In your response, mimic the cadence and style of these messages:
