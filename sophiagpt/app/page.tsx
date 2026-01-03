@@ -87,7 +87,7 @@ function CopyButton({ content }: { content: string }) {
   return (
     <button
       onClick={copyToClipboard}
-      className="-ml-2 flex items-center gap-2 text-xs text-gray-200 transition-colors hover:bg-[#2A2A2A] rounded-md p-2"
+      className="-ml-2 flex items-center gap-2 text-xs text-gray-200 transition-colors hover:bg-[#303030] rounded-md p-2"
       aria-label="Copy message"
     >
       {copied ? (
