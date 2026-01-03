@@ -127,17 +127,17 @@
 /* Markdown styles */
 .markdown {
   color: rgb(229, 229, 229);
-  line-height: 1.75;
+  line-height: 1.5;
 }
 
 .markdown p {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
   font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
   line-height: 1.25;
 }
 
@@ -146,7 +146,7 @@
 .markdown h3 { font-size: 1.25rem; }
 
 .markdown ul, .markdown ol {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   padding-left: 1.5rem;
 }
 
@@ -154,7 +154,7 @@
 .markdown ol { list-style-type: decimal; }
 
 .markdown li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
 }
 
 .markdown a {
@@ -176,10 +176,10 @@
 
 .markdown pre {
   background-color: rgb(30, 30, 30);
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 0.5rem;
   overflow-x: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .markdown pre code {
@@ -192,7 +192,7 @@
 .markdown blockquote {
   border-left: 4px solid rgb(75, 85, 99);
   padding-left: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-style: italic;
   color: rgb(156, 163, 175);
 }
@@ -200,7 +200,7 @@
 .markdown table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .markdown th, .markdown td {
@@ -218,13 +218,13 @@
   max-width: 100%;
   height: auto;
   border-radius: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .markdown hr {
   border: none;
   border-top: 1px solid rgb(75, 85, 99);
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 }
 
 .markdown strong {
