@@ -147,12 +147,17 @@ export async function POST(req: Request) {
 
     // 3) Generate response with OpenAI Responses API
     // We'll pass the conversation as input messages so it can stay coherent.
+    // Strip out any extra properties like chatId, id, createdAt, etc. that the DB might add
+    const cleanMessages = messages.map((m: Message & Record<string, unknown>) => ({
+      role: m.role,
+      content: m.content,
+    }));
     console.log("🔄 Calling OpenAI Responses API...");
     const response = await openai.responses.create({
       model: "gpt-5",
       reasoning: { effort: "medium" },
       instructions,
-      input: messages, // messages array with roles/content
+      input: cleanMessages, // clean messages array with only role/content
     });
 
     // Pull the text output (simple path)

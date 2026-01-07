@@ -127,6 +127,25 @@ export default function Home() {
   };
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
 
+  // Load chats from database when user logs in
+  useEffect(() => {
+    const loadChats = async () => {
+      try {
+        const res = await fetch("/api/chats");
+        if (res.ok) {
+          const dbChats = await res.json();
+          setChats(dbChats);
+        }
+      } catch (error) {
+        console.error("Error loading chats:", error);
+      }
+    };
+
+    if (session?.user) {
+      loadChats();
+    }
+  }, [session?.user]);
+
   useEffect(() => {
     // If loading just finished and we have an assistant message, scroll to it
     if (!isLoading && messages.length > 0 && messages[messages.length - 1].role === "assistant") {
@@ -185,17 +204,55 @@ export default function Home() {
     const data = await res.json();
     setIsLoading(false);
     
+    const finalMessages: Msg[] = [...next, { role: "assistant" as const, content: data.text || "ngmi 💀" }];
+    
     // Update with assistant response
     setChats((prev) =>
       prev.map((c) =>
         c.id === currentChatId
           ? {
               ...c,
-              messages: [...next, { role: "assistant", content: data.text || "ngmi 💀" }],
+              messages: finalMessages,
             }
           : c
       )
     );
+
+    // Save to database if user is logged in
+    if (session?.user) {
+      try {
+        if (!chatExists) {
+          // Create new chat in database
+          const chatRes = await fetch("/api/chats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: text.slice(0, 30) + (text.length > 30 ? "..." : ""),
+              messages: finalMessages,
+            }),
+          });
+          if (chatRes.ok) {
+            const newChat: Chat = await chatRes.json();
+            // Update the chat ID to the database ID
+            setChats((prev) =>
+              prev.map((c) =>
+                c.id === currentChatId ? newChat : c
+              )
+            );
+            setCurrentChatId(newChat.id);
+          }
+        } else {
+          // Update existing chat in database
+          await fetch(`/api/chats/${currentChatId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: finalMessages }),
+          });
+        }
+      } catch (error) {
+        console.error("Error saving chat:", error);
+      }
+    }
   }
 
   function updateMessages(newMessages: Msg[]) {
@@ -222,7 +279,7 @@ export default function Home() {
     setInput("");
   }
 
-  function deleteChat(id: string) {
+  async function deleteChat(id: string) {
     setChats((prev) => {
       const filtered = prev.filter((c) => c.id !== id);
       if (currentChatId === id) {
@@ -232,6 +289,17 @@ export default function Home() {
       }
       return filtered;
     });
+
+    // Delete from database if user is logged in
+    if (session?.user) {
+      try {
+        await fetch(`/api/chats/${id}`, {
+          method: "DELETE",
+        });
+      } catch (error) {
+        console.error("Error deleting chat:", error);
+      }
+    }
   }
 
   function startRename(id: string, currentTitle: string) {
@@ -239,11 +307,24 @@ export default function Home() {
     setRenameValue(currentTitle);
   }
 
-  function saveRename(id: string) {
+  async function saveRename(id: string) {
     if (renameValue.trim()) {
       setChats((prev) =>
         prev.map((c) => (c.id === id ? { ...c, title: renameValue.trim() } : c))
       );
+
+      // Update in database if user is logged in
+      if (session?.user) {
+        try {
+          await fetch(`/api/chats/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: renameValue.trim() }),
+          });
+        } catch (error) {
+          console.error("Error renaming chat:", error);
+        }
+      }
     }
     setRenamingId(null);
     setRenameValue("");
