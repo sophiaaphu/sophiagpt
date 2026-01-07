@@ -269,10 +269,11 @@ export default function Home() {
             </div>
           )}
         </SidebarHeader>
-        <SidebarContent className={`text-white pb-4 ${open ? 'bg-[#181818]' : 'bg-[#212121] border-r border-white/10'} [scrollbar-width:thin] [scrollbar-color:#666_transparent] hover:[scrollbar-color:#666_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500`}>
+        <SidebarContent className={`text-white flex flex-col h-full ${open ? 'bg-[#181818]' : 'bg-[#212121] border-r border-white/10'}`}>
           {open ? (
             <>
-              <div className="px-2">
+              {/* Fixed buttons at top */}
+              <div className="shrink-0 px-2">
                 <button
                   onClick={newChat}
                   className="flex w-full items-center gap-2 rounded-md px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] transition"
@@ -287,84 +288,88 @@ export default function Home() {
                   Search Chats
                 </button>
               </div>
-              <div className="px-6 pt-4">
-                <button
-                  onClick={() => setChatsExpanded(!chatsExpanded)}
-                  className="group/chats-toggle flex gap-1 items-center text-sm text-[#A6A6A6] transition"
-                >
-                  <span className="text-sm text-[#A6A6A6]">Your chats</span>
-                  {chatsExpanded ? (
-                    <ChevronUp className="size-4 opacity-0 group-hover/chats-toggle:opacity-100 transition-opacity" />
-                  ) : (
-                    <ChevronRight className="size-4" />
-                  )}
-                </button>
+
+              {/* Scrollable area for chats only */}
+              <div className="flex-1 overflow-y-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#666_transparent] hover:[scrollbar-color:#666_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500">
+                <div className="px-6 pt-4 pb-2">
+                  <button
+                    onClick={() => setChatsExpanded(!chatsExpanded)}
+                    className="group/chats-toggle flex gap-1 items-center text-sm text-[#A6A6A6] transition"
+                  >
+                    <span className="text-sm text-[#A6A6A6]">Your chats</span>
+                    {chatsExpanded ? (
+                      <ChevronUp className="size-4 opacity-0 group-hover/chats-toggle:opacity-100 transition-opacity" />
+                    ) : (
+                      <ChevronRight className="size-4" />
+                    )}
+                  </button>
+                </div>
+                {chatsExpanded && (
+                  <SidebarMenu>
+                    {chats.map((chat) => (
+                      <SidebarMenuItem key={chat.id}>
+                        <div className={`group/chat-item flex items-center mx-2 rounded-md hover:bg-[#2F2F2F] transition ${chat.id === currentChatId ? 'bg-[#222222]' : ''}`}>
+                          {renamingId === chat.id ? (
+                            <input
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveRename(chat.id);
+                                if (e.key === "Escape") {
+                                  setRenamingId(null);
+                                  setRenameValue("");
+                                }
+                              }}
+                              onBlur={() => saveRename(chat.id)}
+                              autoFocus
+                              className="flex-1 bg-neutral-800 text-white px-4 py-1.5 text-sm rounded-md outline-none focus:outline-none"
+                            />
+                          ) : (
+                            <>
+                              <SidebarMenuButton
+                                isActive={chat.id === currentChatId}
+                                onClick={() => setCurrentChatId(chat.id)}
+                                className="flex-1 text-white hover:text-white hover:bg-transparent transition data-[active=true]:bg-transparent data-[active=true]:text-white data-[active=true]:font-normal"
+                              >
+                                <span className="truncate text-sm p-2">{chat.title}</span>
+                              </SidebarMenuButton>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="opacity-0 group-hover/chat-item:opacity-100 data-[state=open]:opacity-100 p-2 rounded-md transition outline-none focus:outline-none focus-visible:ring-0">
+                                    <MoreHorizontal className="size-4 text-neutral-300" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-40 bg-[#3A3A3A] border-neutral-700">
+                                  <DropdownMenuItem
+                                    onClick={() => startRename(chat.id, chat.title)}
+                                    className="text-white hover:bg-[#4A4A4A] focus:bg-[#4A4A4A] focus:text-white cursor-pointer"
+                                  >
+                                    <Pencil className="size-4 text-white" />
+                                    Rename
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="bg-neutral-600" />
+                                  <DropdownMenuItem
+                                    onClick={() => deleteChat(chat.id)}
+                                    variant="destructive"
+                                    className="cursor-pointer"
+                                  >
+                                    <Trash2 className="size-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </>
+                          )}
+                        </div>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                )}
               </div>
-              {chatsExpanded && (
-                <SidebarMenu>
-                  {chats.map((chat) => (
-                    <SidebarMenuItem key={chat.id}>
-                      <div className={`group/chat-item flex items-center mx-2 rounded-md hover:bg-[#2F2F2F] transition ${chat.id === currentChatId ? 'bg-[#222222]' : ''}`}>
-                        {renamingId === chat.id ? (
-                          <input
-                            type="text"
-                            value={renameValue}
-                            onChange={(e) => setRenameValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") saveRename(chat.id);
-                              if (e.key === "Escape") {
-                                setRenamingId(null);
-                                setRenameValue("");
-                              }
-                            }}
-                            onBlur={() => saveRename(chat.id)}
-                            autoFocus
-                            className="flex-1 bg-neutral-800 text-white px-4 py-1.5 text-sm rounded-md outline-none focus:outline-none"
-                          />
-                        ) : (
-                          <>
-                            <SidebarMenuButton
-                              isActive={chat.id === currentChatId}
-                              onClick={() => setCurrentChatId(chat.id)}
-                              className="flex-1 text-white hover:text-white hover:bg-transparent transition data-[active=true]:bg-transparent data-[active=true]:text-white data-[active=true]:font-normal"
-                            >
-                              <span className="truncate text-sm p-2">{chat.title}</span>
-                            </SidebarMenuButton>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="opacity-0 group-hover/chat-item:opacity-100 data-[state=open]:opacity-100 p-2 rounded-md transition outline-none focus:outline-none focus-visible:ring-0">
-                                  <MoreHorizontal className="size-4 text-neutral-300" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start" className="w-40 bg-[#3A3A3A] border-neutral-700">
-                                <DropdownMenuItem
-                                  onClick={() => startRename(chat.id, chat.title)}
-                                  className="text-white hover:bg-[#4A4A4A] focus:bg-[#4A4A4A] focus:text-white cursor-pointer"
-                                >
-                                  <Pencil className="size-4 text-white" />
-                                  Rename
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-neutral-600" />
-                                <DropdownMenuItem
-                                  onClick={() => deleteChat(chat.id)}
-                                  variant="destructive"
-                                  className="cursor-pointer"
-                                >
-                                  <Trash2 className="size-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </>
-                        )}
-                      </div>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              )}
               
-              {/* Auth UI - Expanded */}
-              <div className="mt-auto pt-4 px-2 border-t border-white/10">
+              {/* Auth UI - Expanded - Fixed at bottom */}
+              <div className="shrink-0 pt-2 pb-2 px-2 border-t border-white/10">
                 {status === "loading" ? (
                   <div className="w-full h-10 rounded-md bg-[#303030] animate-pulse" />
                 ) : session ? (
@@ -403,8 +408,9 @@ export default function Home() {
                 ) : (
                   <button
                     onClick={() => signIn("google")}
-                    className="w-full px-4 bg-[#181818] text-white text-sm text-left"
+                    className="w-full px-4 rounded-md py-2 bg-[#181818] text-white text-sm text-left hover:bg-[#2A2A2A] transition flex items-center gap-2"
                   >
+                    <LogOut className="h-4 w-4 rotate-180" />
                     Sign in to save chats
                   </button>
                 )}
@@ -412,7 +418,8 @@ export default function Home() {
             </>
           ) : !isMobile ? (
             <>
-              <div className="flex flex-col items-center gap-0 px-2 mt-2">
+              {/* Fixed icons at top */}
+              <div className="shrink-0 flex flex-col items-center gap-0 px-2 mt-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -440,8 +447,11 @@ export default function Home() {
                 </Tooltip>
               </div>
               
-              {/* Auth UI - Collapsed */}
-              <div className="mt-auto pt-4 px-2 border-t border-white/10">
+              {/* Spacer to push auth to bottom */}
+              <div className="flex-1"></div>
+              
+              {/* Auth UI - Collapsed - Fixed at bottom */}
+              <div className="shrink-0 pt-2 pb-2 px-2 border-t border-white/10">
                 {status === "loading" ? (
                   <div className="w-10 h-10 rounded-full bg-[#303030] animate-pulse mx-auto" />
                 ) : session ? (
