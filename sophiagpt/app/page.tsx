@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp, Copy, Check } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { SquarePen, Search, ChevronRight, ChevronUp, MoreHorizontal, Pencil, Trash2, ArrowUp, Copy, Check, LogOut } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -104,6 +105,7 @@ function CopyButton({ content }: { content: string }) {
 }
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const { open, isMobile, openMobile, toggleSidebar } = useSidebar();
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState("initial");
@@ -146,6 +148,12 @@ export default function Home() {
   async function send() {
     const text = input.trim();
     if (!text || !currentChat) return;
+    
+    // Require authentication to send messages
+    if (!session) {
+      signIn("google");
+      return;
+    }
 
     const next: Msg[] = [...messages, { role: "user", content: text }];
     
@@ -354,35 +362,146 @@ export default function Home() {
                   ))}
                 </SidebarMenu>
               )}
+              
+              {/* Auth UI - Expanded */}
+              <div className="mt-auto pt-4 px-2 border-t border-white/10">
+                {status === "loading" ? (
+                  <div className="w-full h-10 rounded-md bg-[#303030] animate-pulse" />
+                ) : session ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-3 w-full rounded-md px-3 py-2 text-sm text-white hover:bg-[#2A2A2A] transition">
+                        {session.user?.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt={session.user.name || "User"}
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-semibold">
+                            {session.user?.name?.[0]?.toUpperCase() || "U"}
+                          </div>
+                        )}
+                        <div className="flex-1 text-left overflow-hidden">
+                          <p className="text-white text-sm truncate">{session.user?.name}</p>
+                          <p className="text-xs text-gray-400 truncate">{session.user?.email}</p>
+                        </div>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className=" w-62 bg-[#353535] border-white/10">
+                      <DropdownMenuItem
+                        onClick={() => signOut()}
+                        className="cursor-pointer text-white focus:bg-[#4A4A4A] focus:text-white"
+                      >
+                        <LogOut className="h-4 w-4 text-white"/>
+                        Sign out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button
+                    onClick={() => signIn("google")}
+                    className="w-full px-4 bg-[#181818] text-white text-sm text-left"
+                  >
+                    Sign in to save chats
+                  </button>
+                )}
+              </div>
             </>
           ) : !isMobile ? (
-            <div className="flex flex-col items-center gap-0 px-2 mt-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={newChat}
-                    className="aspect-square flex items-center justify-center p-1.75 rounded-sm text-white hover:bg-[#303030] transition"
-                  >
-                    <SquarePen className="size-4.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>New Chat</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="aspect-square flex items-center justify-center p-1.75 rounded-sm text-white hover:bg-[#303030] transition"
-                  >
-                    <Search className="size-4.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Search Chats</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <>
+              <div className="flex flex-col items-center gap-0 px-2 mt-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={newChat}
+                      className="aspect-square flex items-center justify-center p-1.75 rounded-sm text-white hover:bg-[#303030] transition"
+                    >
+                      <SquarePen className="size-4.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>New Chat</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="aspect-square flex items-center justify-center p-1.75 rounded-sm text-white hover:bg-[#303030] transition"
+                    >
+                      <Search className="size-4.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Search Chats</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              
+              {/* Auth UI - Collapsed */}
+              <div className="mt-auto pt-4 px-2 border-t border-white/10">
+                {status === "loading" ? (
+                  <div className="w-10 h-10 rounded-full bg-[#303030] animate-pulse mx-auto" />
+                ) : session ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="aspect-square flex items-center justify-center p-1 rounded-full hover:bg-[#303030] transition mx-auto">
+                            {session.user?.image ? (
+                              <Image
+                                src={session.user.image}
+                                alt={session.user.name || "User"}
+                                width={32}
+                                height={32}
+                                className="rounded-full"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-semibold">
+                                {session.user?.name?.[0]?.toUpperCase() || "U"}
+                              </div>
+                            )}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-[#2A2A2A] border-white/10">
+                          <div className="px-2 py-1.5 text-sm text-gray-300">
+                            <p className="font-medium text-white">{session.user?.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{session.user?.email}</p>
+                          </div>
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuItem
+                            onClick={() => signOut()}
+                            className="cursor-pointer text-white focus:bg-[#4A4A4A] focus:text-white"
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign out
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>{session.user?.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => signIn("google")}
+                        className="aspect-square flex items-center justify-center p-1.75 rounded-sm text-white hover:bg-[#303030] transition mx-auto"
+                      >
+                        <LogOut className="size-4.5 rotate-180" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Sign in to save chats</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </>
           ) : null}
         </SidebarContent>
       </Sidebar>
