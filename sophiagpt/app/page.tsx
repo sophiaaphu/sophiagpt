@@ -375,7 +375,7 @@ export default function Home() {
                 ) : session ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-3 w-full rounded-md px-3 py-2 text-sm text-white hover:bg-[#2A2A2A] transition">
+                      <button className="flex items-center gap-3 w-full rounded-md px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] transition">
                         {session.user?.image ? (
                           <Image
                             src={session.user.image}
@@ -395,7 +395,7 @@ export default function Home() {
                         </div>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className=" w-62 bg-[#353535] border-white/10">
+                    <DropdownMenuContent align="start" className="w-68 md:w-62 bg-[#353535] border-white/10">
                       <DropdownMenuItem
                         onClick={() => signOut()}
                         className="cursor-pointer text-white focus:bg-[#4A4A4A] focus:text-white"
