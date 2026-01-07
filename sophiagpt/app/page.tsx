@@ -127,6 +127,23 @@ export default function Home() {
   };
   const messages = useMemo(() => currentChat?.messages || [], [currentChat?.messages]);
 
+  // Random greeting with user's name - changes on refresh
+  const [greetingIndex] = useState(() => Math.floor(Math.random() * 8));
+  const greeting = useMemo(() => {
+    const userName = session?.user?.name?.split(' ')[0] || "there";
+    const greetings = [
+      "Anything ngmi on your mind?",
+      "Sigma when you are.",
+      "Where should ts begin?",
+      `Hey, ${userName}. Ready to be gmi?`,
+      `How can I be skibidi ${userName}?`,
+      "What's cooking for today?",
+      `It's gmi to see you, ${userName}.`,
+      "What are you cooking right now?",
+    ];
+    return greetings[greetingIndex];
+  }, [greetingIndex, session?.user?.name]);
+
   // Load chats from database when user logs in
   useEffect(() => {
     const loadChats = async () => {
@@ -608,7 +625,7 @@ export default function Home() {
         <div ref={chatContainerRef} className={`flex-1 overflow-y-auto mx-auto w-full p-4 md:p-0 ${open ? 'max-w-2xl' : 'max-w-3xl'} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
           {messages.length === 1 && messages[0].role === "assistant" ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 pb-48">
-              <h2 className="text-2xl md:text-3xl text-white text-center">Anything ngmi on your mind?</h2>
+              <h2 className="text-2xl md:text-3xl text-white text-center">{greeting}</h2>
               <div className="relative w-full">
                 <textarea
                   ref={textareaRef}
