@@ -20,8 +20,8 @@ export async function GET() {
 
   const chats = await prisma.chat.findMany({
     where: { userId: user.id },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-    orderBy: { createdAt: "desc" },
+    include: { messages: { orderBy: { order: "asc" } } },
+    orderBy: { updatedAt: "desc" },
   });
 
   return NextResponse.json(chats);
@@ -49,13 +49,14 @@ export async function POST(request: NextRequest) {
       title,
       userId: user.id,
       messages: {
-        create: messages.map((msg: { role: string; content: string }) => ({
+        create: messages.map((msg: { role: string; content: string }, index: number) => ({
           role: msg.role,
           content: msg.content,
+          order: index,
         })),
       },
     },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
+    include: { messages: { orderBy: { order: "asc" } } },
   });
 
   return NextResponse.json(chat);

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
@@ -63,20 +63,25 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
         if (messages.length > 0) {
           await tx.message.createMany({
-            data: messages.map((m) => ({
+            data: messages.map((m, index) => ({
               chatId,
               role: m.role,
               content: m.content,
+              order: index,
             })),
           });
         }
       }
+      await tx.chat.update({
+        where: { id: chatId },
+        data: { updatedAt: new Date() },
+      });
 
       // Return updated chat with messages
       return tx.chat.findUnique({
         where: { id: chatId },
         include: {
-          messages: { orderBy: { createdAt: "asc" } },
+          messages: { orderBy: { order: "asc" } },
         },
       });
     });

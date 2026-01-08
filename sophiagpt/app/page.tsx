@@ -223,17 +223,17 @@ export default function Home() {
     
     const finalMessages: Msg[] = [...next, { role: "assistant" as const, content: data.text || "ngmi 💀" }];
     
-    // Update with assistant response
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === currentChatId
-          ? {
-              ...c,
-              messages: finalMessages,
-            }
-          : c
-      )
-    );
+    // Update with assistant response and move to top
+    setChats((prev) => {
+      const updatedChat = prev.find(c => c.id === currentChatId);
+      if (!updatedChat) return prev;
+      
+      const otherChats = prev.filter(c => c.id !== currentChatId);
+      return [
+        { ...updatedChat, messages: finalMessages },
+        ...otherChats
+      ];
+    });
 
     // Save to database if user is logged in
     if (session?.user) {
@@ -273,20 +273,23 @@ export default function Home() {
   }
 
   function updateMessages(newMessages: Msg[]) {
-    setChats((prev) =>
-      prev.map((c) =>
-        c.id === currentChatId
-          ? {
-              ...c,
-              messages: newMessages,
-              title:
-                newMessages.length > 1
-                  ? newMessages[1].content.slice(0, 30) + "..."
-                  : "New Chat",
-            }
-          : c
-      )
-    );
+    setChats((prev) => {
+      const updatedChat = prev.find(c => c.id === currentChatId);
+      if (!updatedChat) return prev;
+      
+      const otherChats = prev.filter(c => c.id !== currentChatId);
+      return [
+        {
+          ...updatedChat,
+          messages: newMessages,
+          title:
+            newMessages.length > 1
+              ? newMessages[1].content.slice(0, 30) + "..."
+              : "New Chat",
+        },
+        ...otherChats
+      ];
+    });
   }
 
   function newChat() {

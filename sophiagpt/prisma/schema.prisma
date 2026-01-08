@@ -74,7 +74,9 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role      String
   content   String   @db.Text
+  order     Int      // Explicit order for reliable message sequencing
   createdAt DateTime @default(now())
 
   @@index([chatId])
+  @@index([chatId, order])
 }
