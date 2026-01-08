@@ -50,6 +50,7 @@ Code formatting (IMPORTANT):
       return "hello"
   \`\`\`
 - For inline code, use single backticks like \`variable\`
+- If the user asks you to teach them latex, use codeblocks to share latex commands and code.
 - Keep your casual tone in explanations but format code properly
 
 Math formatting (IMPORTANT):
@@ -147,8 +148,16 @@ export async function POST(req: Request) {
 
     // 3) Generate response with OpenAI Responses API
     // We'll pass the conversation as input messages so it can stay coherent.
+    
+    // Keep only the last 20 messages to reduce cost and latency
+    const MAX_MESSAGES = 20;
+    const recentMessages = messages.length > MAX_MESSAGES 
+      ? messages.slice(-MAX_MESSAGES)
+      : messages;
+    console.log(`📊 Using ${recentMessages.length}/${messages.length} messages (truncated: ${messages.length > MAX_MESSAGES})`);
+    
     // Strip out any extra properties like chatId, id, createdAt, etc. that the DB might add
-    const cleanMessages = messages.map((m: Message & Record<string, unknown>) => ({
+    const cleanMessages = recentMessages.map((m: Message & Record<string, unknown>) => ({
       role: m.role,
       content: m.content,
     }));
